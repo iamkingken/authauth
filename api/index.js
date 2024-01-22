@@ -10,24 +10,32 @@ import path from "path";
 mongoose
   .connect(process.env.MONGO)
   .then(() => {
-    console.log("Conneted to MongoDB");
+    console.log("Connected to MongoDB");
   })
   .catch((err) => {
     console.log(err);
   });
 
 const __dirname = path.resolve();
+const isProduction = process.env.NODE_ENV === 'production';
 
 const app = express();
 
-app.use(express.static(path.join(__dirname, "/client/dist")));
+// Serve static files directly from the "client" directory during development
+if (!isProduction) {
+  app.use(express.static(path.join(__dirname, 'client')));
+}
+
+// Serve static files from the "client/dist" directory in production
+app.use(express.static(path.join(__dirname, 'client', 'dist')));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
+  // Use path.join to create the correct file path
+  // In production, this will point to 'client/dist/index.html'
+  res.sendFile(path.join(__dirname, isProduction ? 'client/dist' : 'client', 'index.html'));
 });
 
 app.use(express.json());
-
 app.use(cookieParser());
 
 app.listen(3000, () => {
